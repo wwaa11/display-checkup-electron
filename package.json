@@ -1,0 +1,46 @@
+{
+    "name": "new-checkup-electron",
+    "version": "1.0.0",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron .",
+        "dist": "electron-builder"
+    },
+    "devDependencies": {
+        "electron": "^39.0.0",
+        "electron-builder": "^24.13.3"
+    },
+    "build": {
+        "appId": "com.pr9.display",
+        "productName": "Display Checkup",
+        "icon": "images/Logo.ico",
+        "files": [
+            "**/*"
+        ],
+        "asar": true,
+        "win": {
+            "target": [
+                {
+                    "target": "nsis",
+                    "arch": [
+                        "x64"
+                    ]
+                }
+            ],
+            "artifactName": "DisplayCheckup-${version}.exe",
+            "icon": "images/Logo.ico"
+        },
+        "nsis": {
+            "oneClick": false,
+            "include": "installer.nsh",
+            "warningsAsErrors": false,
+            "installerIcon": "images/Logo.ico",
+            "uninstallerIcon": "images/Logo.ico",
+            "installerHeaderIcon": "images/Logo.ico",
+            "perMachine": false,
+            "allowToChangeInstallationDirectory": false,
+            "createDesktopShortcut": true,
+            "shortcutName": "Display Checkup"
+        }
+    }
+}

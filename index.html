@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Display Checkup</title>
+    <link rel="shortcut icon" href="images/Logo.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .colorChangeText {
+            color: #005955;
+        }
+
+        .colorChangeBG {
+            background-color: #005955;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.8/dist/axios.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body class="overflow-hidden font-sans antialiased" auto>
+    <div class="h-screen w-full">
+        <div class="mb-2 flex max-h-[13%] w-full font-bold shadow-lg">
+            <div class="m-3 flex-shrink">
+                <img class="h-full p-2" src="images/Side Logo.png" alt="">
+            </div>
+            <div class="m-3 flex-grow text-center">
+                <div class="colorChangeText text-3xl">ศูนย์ตรวจสุขภาพ รพ.พระรามเก้า</div>
+                <div class="text-s text-red-800">รพ.พระรามเก้า ยินดีต้อนรับ</div>
+                <div class="text-s text-red-800">Welcome to Praram 9 Hospital</div>
+            </div>
+            <div class="colorChangeBG m-3 flex flex-shrink gap-3 rounded p-3 text-3xl text-white">
+                <div class="m-auto">
+                    <div id="time"></div>
+                </div>
+                <div class="m-auto flex-grow">
+                    <div id="date"></div>
+                    <div id="dateen"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex" id="stationsRows"></div>
+
+        <div class="m-3 grid grid-cols-3 gap-3 text-center text-white">
+            <div class="col-span-2">
+                <div class="colorChangeBG rounded p-3 text-5xl">คิวถัดไป / Next Queue</div>
+                <div class="grid grid-flow-col grid-rows-4" id="process"></div>
+            </div>
+            <div class="col-span-1">
+                <div class="colorChangeBG rounded p-3 text-3xl" id="contactStation">กรุณาติดต่อแผนก</div>
+                <div class="grid grid-flow-col grid-rows-4" id="wait"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let stationId = null;
+        let stationIds = [];
+        let stations = [];
+
+        $(document).ready(async function () {
+            startTime();
+            await initStations();
+            setTimeout(function () {
+                getList();
+            }, 1000 * 0);
+        });
+
+        async function initStations() {
+            try {
+                const stationParam = new URLSearchParams(window.location.search).get('station') || 'vitalsign';
+                const url = 'https://pr9webhub.praram9.com/checkup/station/displaylist?station=' + encodeURIComponent(stationParam);
+                const rsp = await axios.get(url);
+                const data = rsp?.data ?? rsp;
+                stations = data?.stations ?? data?.data?.stations ?? [];
+                stationId = data?.stationid ?? data?.station ?? data?.station_id ?? (stations[0]?.code ?? null);
+                stationIds = parseStationIds(data, stations);
+                renderStations(stations);
+                const stationName = stations?.[0]?.name ? stations[0].name : '';
+                if (stationName) {
+                    $('#contactStation').html('กรุณาติดต่อแผนก ' + stationName);
+                }
+            } catch (e) {
+                console.error('Failed to load display list', e);
+                $('#stationsRows').html('<div class="text-red-600 p-4">Failed to load station list.</div>');
+            }
+        }
+
+        function renderStations(stations) {
+            const container = $('#stationsRows');
+            container.empty();
+            (stations || []).forEach(station => {
+                const row = $('<div class="flex-grow"></div>');
+                const inner = $('<div class="mx-6 my-3 flex gap-6"></div>');
+                (station.substations || []).forEach(sub => {
+                    const subId = `${sub.station_id}_${sub.id}`;
+                    const roomNum = String((sub?.name || '').match(/\d+/)?.[0] || '');
+                    const card = $('<div class="colorChangeBG flex-grow rounded text-center text-white"></div>');
+                    card.append(`<div class="p-2">${sub?.name || ''}</div>`);
+                    card.append(`<div class="p-3 text-6xl" id="${subId}">-</div>`);
+                    inner.append(card);
+
+                    // Attach hidden inputs for logic parity with original Blade
+                    $('body').append(`<input id="${subId}code" type="hidden" value="${station?.code || stationId || ''}">`);
+                    $('body').append(`<input id="${subId}lang" type="hidden">`);
+                    $('body').append(`<input id="${subId}station" type="hidden" value="${roomNum}">`);
+                });
+                row.append(inner);
+                container.append(row);
+            });
+        }
+
+        async function getList() {
+            const callArr = [];
+            const formData = new FormData();
+            formData.append('station', JSON.stringify(Array.isArray(stationIds) && stationIds.length ? stationIds : toArrayInt(stationId)));
+            try {
+                const res = await axios.post('https://pr9webhub.praram9.com/checkup/display/list', formData);
+                const payload = res?.data ?? {};
+                const sub = payload?.substation ?? payload?.data?.substation ?? [];
+
+                for (let index = 0; index < sub.length; index++) {
+                    let display = '-';
+                    if (sub[index]['now'] != null) {
+                        display = sub[index]['now'];
+                        if (sub[index]['call'] !== null && sub[index]['call'] < 2) {
+                            callArr.push(sub[index]['id']);
+                        }
+                    }
+                    if (sub[index]['id']) {
+                        $('#' + sub[index]['id']).html(display);
+                        $('#' + sub[index]['id'] + 'lang').val(sub[index]['lang'] || 'th');
+                    }
+                }
+
+                const process = payload?.data?.process ?? payload?.process ?? [];
+                let processHtml = '';
+                for (let index = 0; index < process.length; index++) {
+                    if (index < 20) {
+                        processHtml = processHtml +
+                            '<div class="text-6xl colorChangeText p-6 font-bold shadow-lg m-3">' + process[index] +
+                            '</div>';
+                    }
+                }
+                $('#process').html(processHtml);
+
+                const wait = payload?.data?.wait ?? payload?.wait ?? [];
+                let waitHtml = '';
+                for (let index = 0; index < wait.length; index++) {
+                    if (index < 8) {
+                        waitHtml = waitHtml +
+                            '<div class="text-6xl colorChangeText p-6 font-bold shadow-lg m-3">' +
+                            wait[index] + '</div>';
+                    }
+                }
+                $('#wait').html(waitHtml);
+            } catch (e) {
+                console.error('Failed to refresh list', e);
+            }
+
+            for (let index = 0; index < callArr.length; index++) {
+                await playID(callArr[index]);
+            }
+
+            setTimeout(function () {
+                getList();
+            }, 1000 * 5);
+        }
+
+        function parseStationIds(data, stations) {
+            try {
+                // Prefer explicit array fields from backend
+                const direct = data?.stationIds ?? data?.stationids ?? data?.station_id_list ?? data?.station_list;
+                if (Array.isArray(direct)) return toArrayInt(direct);
+
+                // Single value scenarios
+                const single = data?.stationid ?? data?.station ?? data?.station_id;
+                if (Array.isArray(single)) return toArrayInt(single);
+                if (typeof single === 'number') return [single];
+                if (typeof single === 'string') {
+                    // comma or non-digit separated list like "2,1" or "2|1"
+                    const parts = single.split(/[^0-9]+/).filter(Boolean);
+                    const ints = parts.map(p => parseInt(p, 10)).filter(n => !Number.isNaN(n));
+                    if (ints.length) return ints;
+                }
+
+                // Fallback: derive from stations array if ids are numeric
+                const fromStations = (stations || []).map(s => parseInt(s?.id, 10)).filter(n => !Number.isNaN(n));
+                if (fromStations.length) return fromStations;
+
+                // Last resort: empty list
+                return [];
+            } catch (_) {
+                return [];
+            }
+        }
+
+        function toArrayInt(value) {
+            if (Array.isArray(value)) return value.map(v => parseInt(v, 10)).filter(n => !Number.isNaN(n));
+            if (typeof value === 'number') return [value];
+            if (typeof value === 'string') {
+                const parts = value.split(/[^0-9]+/).filter(Boolean);
+                const ints = parts.map(p => parseInt(p, 10)).filter(n => !Number.isNaN(n));
+                if (ints.length) return ints;
+            }
+            return [];
+        }
+
+        async function playID(id) {
+            const vn = $('#' + id).html();
+            const lang = $('#' + id + 'lang').val();
+            const room = $('#' + id + 'station').val();
+            const station = $('#' + id + 'code').val();
+
+            const swal = Swal.fire({
+                title: '<div>ขอเชิญหมายเลข</div><div><b style="color: red;font-size: 3em; padding-x: 3em">' +
+                    vn + '</b><div><div>ที่ห้อง ' + room + '</div>',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+            });
+
+            await playsounds(vn, lang, room, station);
+            await new Promise(r => setTimeout(r, 500));
+            swal.close && swal.close();
+
+            const formData = new FormData();
+            formData.append('station', station);
+            formData.append('vn', vn);
+            try {
+                await axios.post('https://pr9webhub.praram9.com/checkup/display/updateCall', formData);
+            } catch (e) {
+                console.error('Failed to update call', e);
+            }
+
+            return 'success';
+        }
+
+        async function playsounds(vn, lang, room, station) {
+            vn = String(vn).split("");
+            let audio0_1, audio0_2, audio0_3, audio0_4, audio1, audio2, audio3, audio4, audio5, audio6, audio7, audio8, audio9,
+                audioin, audioout, room1, room2, room3, room4, room5, staff, vital, blood, ekg, abi, estecho, xray, mammo, bone, ultra, obs;
+
+            if (lang === 'th') {
+                audio0_1 = new Audio('sounds/th/0.mp3');
+                audio0_2 = new Audio('sounds/th/0.mp3');
+                audio0_3 = new Audio('sounds/th/0.mp3');
+                audio0_4 = new Audio('sounds/th/0.mp3');
+                audio1 = new Audio('sounds/th/1.mp3');
+                audio2 = new Audio('sounds/th/2.mp3');
+                audio3 = new Audio('sounds/th/3.mp3');
+                audio4 = new Audio('sounds/th/4.mp3');
+                audio5 = new Audio('sounds/th/5.mp3');
+                audio6 = new Audio('sounds/th/6.mp3');
+                audio7 = new Audio('sounds/th/7.mp3');
+                audio8 = new Audio('sounds/th/8.mp3');
+                audio9 = new Audio('sounds/th/9.mp3');
+                audioin = new Audio('sounds/th/in.mp3');
+                audioout = new Audio('sounds/th/out.mp3');
+
+                room1 = new Audio('sounds/th/1.mp3');
+                room2 = new Audio('sounds/th/2.mp3');
+                room3 = new Audio('sounds/th/3.mp3');
+                room4 = new Audio('sounds/th/4.mp3');
+                room5 = new Audio('sounds/th/5.mp3');
+
+                staff = new Audio('sounds/th/empty.mp3');
+                vital = new Audio('sounds/th/vs.mp3');
+                blood = new Audio('sounds/th/lab.mp3');
+                ekg = new Audio('sounds/th/ekg.mp3');
+                abi = new Audio('sounds/th/empty.mp3');
+                estecho = new Audio('sounds/th/empty.mp3');
+                xray = new Audio('sounds/th/xray.mp3');
+                mammo = new Audio('sounds/th/mammo.mp3');
+                bone = new Audio('sounds/th/bone.mp3');
+                ultra = new Audio('sounds/th/ultra.mp3');
+                obs = new Audio('sounds/th/obs.mp3');
+            } else {
+                audio0_1 = new Audio('sounds/en/0.mp3');
+                audio0_2 = new Audio('sounds/en/0.mp3');
+                audio0_3 = new Audio('sounds/en/0.mp3');
+                audio0_4 = new Audio('sounds/en/0.mp3');
+                audio1 = new Audio('sounds/en/1.mp3');
+                audio2 = new Audio('sounds/en/2.mp3');
+                audio3 = new Audio('sounds/en/3.mp3');
+                audio4 = new Audio('sounds/en/4.mp3');
+                audio5 = new Audio('sounds/en/5.mp3');
+                audio6 = new Audio('sounds/en/6.mp3');
+                audio7 = new Audio('sounds/en/7.mp3');
+                audio8 = new Audio('sounds/en/8.mp3');
+                audio9 = new Audio('sounds/en/9.mp3');
+                audioin = new Audio('sounds/en/in.mp3');
+                audioout = new Audio('sounds/en/empty.mp3');
+
+                room1 = new Audio('sounds/en/1.mp3');
+                room2 = new Audio('sounds/en/2.mp3');
+                room3 = new Audio('sounds/en/3.mp3');
+                room4 = new Audio('sounds/en/4.mp3');
+                room5 = new Audio('sounds/en/5.mp3');
+
+                staff = new Audio('sounds/en/empty.mp3');
+                vital = new Audio('sounds/en/vs.mp3');
+                blood = new Audio('sounds/en/lab.mp3');
+                ekg = new Audio('sounds/en/ekg.mp3');
+                abi = new Audio('sounds/en/empty.mp3');
+                estecho = new Audio('sounds/en/empty.mp3');
+                xray = new Audio('sounds/en/xray.mp3');
+                mammo = new Audio('sounds/en/mammo.mp3');
+                bone = new Audio('sounds/en/bone.mp3');
+                ultra = new Audio('sounds/en/ultra.mp3');
+                obs = new Audio('sounds/en/obs.mp3');
+            }
+
+            let num1, num2, num3, num4;
+            vn.forEach((num, index) => {
+                if (index === 0) {
+                    if (num == 0) { num1 = audio0_1; }
+                    if (num == 1) { num1 = audio1; }
+                    if (num == 2) { num1 = audio2; }
+                    if (num == 3) { num1 = audio3; }
+                    if (num == 4) { num1 = audio4; }
+                    if (num == 5) { num1 = audio5; }
+                    if (num == 6) { num1 = audio6; }
+                    if (num == 7) { num1 = audio7; }
+                    if (num == 8) { num1 = audio8; }
+                    if (num == 9) { num1 = audio9; }
+                }
+                if (index === 1) {
+                    if (num == 0) { num2 = audio0_2; }
+                    if (num == 1) { num2 = audio1; }
+                    if (num == 2) { num2 = audio2; }
+                    if (num == 3) { num2 = audio3; }
+                    if (num == 4) { num2 = audio4; }
+                    if (num == 5) { num2 = audio5; }
+                    if (num == 6) { num2 = audio6; }
+                    if (num == 7) { num2 = audio7; }
+                    if (num == 8) { num2 = audio8; }
+                    if (num == 9) { num2 = audio9; }
+                }
+                if (index === 2) {
+                    if (num == 0) { num3 = audio0_3; }
+                    if (num == 1) { num3 = audio1; }
+                    if (num == 2) { num3 = audio2; }
+                    if (num == 3) { num3 = audio3; }
+                    if (num == 4) { num3 = audio4; }
+                    if (num == 5) { num3 = audio5; }
+                    if (num == 6) { num3 = audio6; }
+                    if (num == 7) { num3 = audio7; }
+                    if (num == 8) { num3 = audio8; }
+                    if (num == 9) { num3 = audio9; }
+                }
+                if (index === 3) {
+                    if (num == 0) { num4 = audio0_4; }
+                    if (num == 1) { num4 = audio1; }
+                    if (num == 2) { num4 = audio2; }
+                    if (num == 3) { num4 = audio3; }
+                    if (num == 4) { num4 = audio4; }
+                    if (num == 5) { num4 = audio5; }
+                    if (num == 6) { num4 = audio6; }
+                    if (num == 7) { num4 = audio7; }
+                    if (num == 8) { num4 = audio8; }
+                    if (num == 9) { num4 = audio9; }
+                }
+            });
+
+            const station_name = (function (station) {
+                switch (station) {
+                    case 'b12_register':
+                        return staff;
+                    case 'b12_vitalsign':
+                        return vital;
+                    case 'b12_lab':
+                        return blood;
+                    case 'b12_ekg':
+                        return ekg;
+                    case 'b12_abi':
+                        return abi;
+                    case 'b12_echo':
+                        return estecho;
+                    case 'b12_chest':
+                        return xray;
+                    case 'b12_mammogram':
+                        return mammo;
+                    case 'b12_boneden':
+                        return bone;
+                    case 'b12_ultrasounds':
+                        return ultra;
+                    case 'b12_gny':
+                        return obs;
+                    default:
+                        return staff;
+                }
+            })(station);
+
+            const roomNum = (function (room) {
+                switch (room) {
+                    case '1':
+                        return room1;
+                    case '2':
+                        return room2;
+                    case '3':
+                        return room3;
+                    case '4':
+                        return room4;
+                    case '5':
+                        return room5;
+                    default:
+                        return room1;
+                }
+            })(room);
+
+            await playAudio(audioin);
+            await playAudio(num1);
+            await playAudio(num2);
+            await playAudio(num3);
+            await playAudio(num4);
+            await playAudio(station_name);
+            await playAudio(roomNum);
+            await playAudio(audioout);
+
+            await playAudio(audioin);
+            await playAudio(num1);
+            await playAudio(num2);
+            await playAudio(num3);
+            await playAudio(num4);
+            await playAudio(station_name);
+            await playAudio(roomNum);
+            await playAudio(audioout);
+
+            return 'success';
+        }
+
+        function playAudio(audio) {
+            return new Promise(res => {
+                try {
+                    audio.play();
+                    audio.onended = res;
+                } catch (e) {
+                    res();
+                }
+            });
+        }
+
+        function checkTime(i) {
+            if (i < 10) {
+                i = '0' + i;
+            }
+            return i;
+        }
+
+        function startTime() {
+            const today = new Date();
+            const date = today.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            });
+            const dateen = today.getDate() + ' ' + today.toLocaleString('default', {
+                month: 'long'
+            }) + ' ' + today.getFullYear();
+            const h = today.getHours();
+            let m = today.getMinutes();
+            let s = today.getSeconds();
+            m = checkTime(m);
+            s = checkTime(s);
+            setTimeout(startTime, 500);
+            $('#time').html(h + ':' + m);
+            $('#date').html(date);
+            $('#dateen').html(dateen);
+        }
+    </script>
+</body>
+
+</html>
