@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Display Checkup</title>
     <link rel="shortcut icon" href="images/Logo.ico">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="./dist/output.css" rel="stylesheet">
     <style>
         .colorChangeText {
             color: #005955;
@@ -62,7 +62,11 @@
         let stationIds = [];
         let stations = [];
 
+
+
         $(document).ready(async function () {
+
+
             startTime();
             await initStations();
             setTimeout(function () {
@@ -72,7 +76,7 @@
 
         async function initStations() {
             try {
-                const stationParam = new URLSearchParams(window.location.search).get('station') || 'vitalsign';
+                const stationParam = new URLSearchParams(window.location.search).get('station') || 'none';
                 const url = 'https://pr9webhub.praram9.com/checkup/station/displaylist?station=' + encodeURIComponent(stationParam);
                 const rsp = await axios.get(url);
                 const data = rsp?.data ?? rsp;

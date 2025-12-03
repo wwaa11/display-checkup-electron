@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="../dist/output.css" rel="stylesheet">
+</head>
+
+<body>
+    <h1 class=" font-bold text-center text-amber-200 text-4xl" id="station-display"></h1>
+    <script src="../renderer.cjs"></script>
+    <script src="../echo.mjs" type="module"></script>
+    <script>
+        const stationParam = new URLSearchParams(window.location.search).get('station') || 'none';
+        $('#station-display').text(`${stationParam}`)
+    </script>
+    <script type="module">
+        var arrayData = [];
+
+        setInterval(() => {
+            readFirstData();
+        }, 2000);
+
+        window.Echo.channel("register-channel").listen(".register-number", (data) => {
+            arrayData.push(data);
+        });
+
+        function readFirstData() {
+            if (arrayData.length === 0) {
+                return;
+            }
+            const currentData = arrayData[0];
+
+            Swal.fire({
+                title: `${currentData.number}`,
+                fontSize: '50px',
+                showConfirmButton: false,
+                timer: 1500
+            });
+
+            removeFirstData();
+        }
+
+        function removeFirstData() {
+            arrayData.shift();
+        }
+    </script>
+</body>
+
+</html>
