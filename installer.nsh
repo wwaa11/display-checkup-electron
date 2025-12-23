@@ -19,7 +19,7 @@ Function StationPageCreate
     Abort
   ${EndIf}
 
-  ${NSD_CreateLabel} 0 0 100% 24u "Enter station (e.g., b12_vitalsign):"
+  ${NSD_CreateLabel} 0 0 100% 24u "Enter station (vitalsign,lab):"
   Pop $0
   ${NSD_CreateText} 0 26u 100% 12u ""
   Pop $StationEdit

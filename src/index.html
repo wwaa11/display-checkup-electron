@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Display Checkup</title>
     <link rel="shortcut icon" href="images/Logo.ico">
-    <link href="./dist/output.css" rel="stylesheet">
+    <link href="output.css" rel="stylesheet">
     <style>
         .colorChangeText {
             color: #005955;
@@ -16,16 +16,14 @@
             background-color: #005955;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.8/dist/axios.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../renderer.cjs"></script>
 </head>
 
 <body class="overflow-hidden font-sans antialiased" auto>
     <div class="h-screen w-full">
         <div class="mb-2 flex max-h-[13%] w-full font-bold shadow-lg">
             <div class="m-3 flex-shrink">
-                <img class="h-full p-2" src="images/Side Logo.png" alt="">
+                <img class="h-full p-2" src="../images/Side Logo.png" alt="">
             </div>
             <div class="m-3 flex-grow text-center">
                 <div class="colorChangeText text-3xl">ศูนย์ตรวจสุขภาพ รพ.พระรามเก้า</div>
@@ -249,73 +247,73 @@
                 audioin, audioout, room1, room2, room3, room4, room5, staff, vital, blood, ekg, abi, estecho, xray, mammo, bone, ultra, obs;
 
             if (lang === 'th') {
-                audio0_1 = new Audio('sounds/th/0.mp3');
-                audio0_2 = new Audio('sounds/th/0.mp3');
-                audio0_3 = new Audio('sounds/th/0.mp3');
-                audio0_4 = new Audio('sounds/th/0.mp3');
-                audio1 = new Audio('sounds/th/1.mp3');
-                audio2 = new Audio('sounds/th/2.mp3');
-                audio3 = new Audio('sounds/th/3.mp3');
-                audio4 = new Audio('sounds/th/4.mp3');
-                audio5 = new Audio('sounds/th/5.mp3');
-                audio6 = new Audio('sounds/th/6.mp3');
-                audio7 = new Audio('sounds/th/7.mp3');
-                audio8 = new Audio('sounds/th/8.mp3');
-                audio9 = new Audio('sounds/th/9.mp3');
-                audioin = new Audio('sounds/th/in.mp3');
-                audioout = new Audio('sounds/th/out.mp3');
+                audio0_1 = new Audio('../sounds/th/0.mp3');
+                audio0_2 = new Audio('../sounds/th/0.mp3');
+                audio0_3 = new Audio('../sounds/th/0.mp3');
+                audio0_4 = new Audio('../sounds/th/0.mp3');
+                audio1 = new Audio('../sounds/th/1.mp3');
+                audio2 = new Audio('../sounds/th/2.mp3');
+                audio3 = new Audio('../sounds/th/3.mp3');
+                audio4 = new Audio('../sounds/th/4.mp3');
+                audio5 = new Audio('../sounds/th/5.mp3');
+                audio6 = new Audio('../sounds/th/6.mp3');
+                audio7 = new Audio('../sounds/th/7.mp3');
+                audio8 = new Audio('../sounds/th/8.mp3');
+                audio9 = new Audio('../sounds/th/9.mp3');
+                audioin = new Audio('../sounds/th/in.mp3');
+                audioout = new Audio('../sounds/th/out.mp3');
 
-                room1 = new Audio('sounds/th/1.mp3');
-                room2 = new Audio('sounds/th/2.mp3');
-                room3 = new Audio('sounds/th/3.mp3');
-                room4 = new Audio('sounds/th/4.mp3');
-                room5 = new Audio('sounds/th/5.mp3');
+                room1 = new Audio('../sounds/th/1.mp3');
+                room2 = new Audio('../sounds/th/2.mp3');
+                room3 = new Audio('../sounds/th/3.mp3');
+                room4 = new Audio('../sounds/th/4.mp3');
+                room5 = new Audio('../sounds/th/5.mp3');
 
-                staff = new Audio('sounds/th/empty.mp3');
-                vital = new Audio('sounds/th/vs.mp3');
-                blood = new Audio('sounds/th/lab.mp3');
-                ekg = new Audio('sounds/th/ekg.mp3');
-                abi = new Audio('sounds/th/empty.mp3');
-                estecho = new Audio('sounds/th/empty.mp3');
-                xray = new Audio('sounds/th/xray.mp3');
-                mammo = new Audio('sounds/th/mammo.mp3');
-                bone = new Audio('sounds/th/bone.mp3');
-                ultra = new Audio('sounds/th/ultra.mp3');
-                obs = new Audio('sounds/th/obs.mp3');
+                staff = new Audio('../sounds/th/empty.mp3');
+                vital = new Audio('../sounds/th/vs.mp3');
+                blood = new Audio('../sounds/th/lab.mp3');
+                ekg = new Audio('../sounds/th/ekg.mp3');
+                abi = new Audio('../sounds/th/empty.mp3');
+                estecho = new Audio('../sounds/th/empty.mp3');
+                xray = new Audio('../sounds/th/xray.mp3');
+                mammo = new Audio('../sounds/th/mammo.mp3');
+                bone = new Audio('../sounds/th/bone.mp3');
+                ultra = new Audio('../sounds/th/ultra.mp3');
+                obs = new Audio('../sounds/th/obs.mp3');
             } else {
-                audio0_1 = new Audio('sounds/en/0.mp3');
-                audio0_2 = new Audio('sounds/en/0.mp3');
-                audio0_3 = new Audio('sounds/en/0.mp3');
-                audio0_4 = new Audio('sounds/en/0.mp3');
-                audio1 = new Audio('sounds/en/1.mp3');
-                audio2 = new Audio('sounds/en/2.mp3');
-                audio3 = new Audio('sounds/en/3.mp3');
-                audio4 = new Audio('sounds/en/4.mp3');
-                audio5 = new Audio('sounds/en/5.mp3');
-                audio6 = new Audio('sounds/en/6.mp3');
-                audio7 = new Audio('sounds/en/7.mp3');
-                audio8 = new Audio('sounds/en/8.mp3');
-                audio9 = new Audio('sounds/en/9.mp3');
-                audioin = new Audio('sounds/en/in.mp3');
-                audioout = new Audio('sounds/en/empty.mp3');
+                audio0_1 = new Audio('../sounds/en/0.mp3');
+                audio0_2 = new Audio('../sounds/en/0.mp3');
+                audio0_3 = new Audio('../sounds/en/0.mp3');
+                audio0_4 = new Audio('../sounds/en/0.mp3');
+                audio1 = new Audio('../sounds/en/1.mp3');
+                audio2 = new Audio('../sounds/en/2.mp3');
+                audio3 = new Audio('../sounds/en/3.mp3');
+                audio4 = new Audio('../sounds/en/4.mp3');
+                audio5 = new Audio('../sounds/en/5.mp3');
+                audio6 = new Audio('../sounds/en/6.mp3');
+                audio7 = new Audio('../sounds/en/7.mp3');
+                audio8 = new Audio('../sounds/en/8.mp3');
+                audio9 = new Audio('../sounds/en/9.mp3');
+                audioin = new Audio('../sounds/en/in.mp3');
+                audioout = new Audio('../sounds/en/empty.mp3');
 
-                room1 = new Audio('sounds/en/1.mp3');
-                room2 = new Audio('sounds/en/2.mp3');
-                room3 = new Audio('sounds/en/3.mp3');
-                room4 = new Audio('sounds/en/4.mp3');
-                room5 = new Audio('sounds/en/5.mp3');
+                room1 = new Audio('../sounds/en/1.mp3');
+                room2 = new Audio('../sounds/en/2.mp3');
+                room3 = new Audio('../sounds/en/3.mp3');
+                room4 = new Audio('../sounds/en/4.mp3');
+                room5 = new Audio('../sounds/en/5.mp3');
 
-                staff = new Audio('sounds/en/empty.mp3');
-                vital = new Audio('sounds/en/vs.mp3');
-                blood = new Audio('sounds/en/lab.mp3');
-                ekg = new Audio('sounds/en/ekg.mp3');
-                abi = new Audio('sounds/en/empty.mp3');
-                estecho = new Audio('sounds/en/empty.mp3');
-                xray = new Audio('sounds/en/xray.mp3');
-                mammo = new Audio('sounds/en/mammo.mp3');
-                bone = new Audio('sounds/en/bone.mp3');
-                ultra = new Audio('sounds/en/ultra.mp3');
-                obs = new Audio('sounds/en/obs.mp3');
+                staff = new Audio('../sounds/en/empty.mp3');
+                vital = new Audio('../sounds/en/vs.mp3');
+                blood = new Audio('../sounds/en/lab.mp3');
+                ekg = new Audio('../sounds/en/ekg.mp3');
+                abi = new Audio('../sounds/en/empty.mp3');
+                estecho = new Audio('../sounds/en/empty.mp3');
+                xray = new Audio('../sounds/en/xray.mp3');
+                mammo = new Audio('../sounds/en/mammo.mp3');
+                bone = new Audio('../sounds/en/bone.mp3');
+                ultra = new Audio('../sounds/en/ultra.mp3');
+                obs = new Audio('../sounds/en/obs.mp3');
             }
 
             let num1, num2, num3, num4;

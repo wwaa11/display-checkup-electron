@@ -45,8 +45,8 @@ function createWindow() {
 	const win = new BrowserWindow({
 		width: 1280,
 		height: 800,
-		// autoHideMenuBar: true,
-		// fullscreen: true,
+		autoHideMenuBar: true,
+		fullscreen: true,
 		icon: path.join(__dirname, "images", "Logo.ico"),
 		webPreferences: {
 			_nodeIntegration: true,
@@ -71,7 +71,7 @@ function createWindow() {
 		});
 	}
 
-	win.webContents.openDevTools();
+	// win.webContents.openDevTools();
 }
 
 app.whenReady().then(() => {
